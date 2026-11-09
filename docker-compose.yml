@@ -1,0 +1,16 @@
+services:
+  lab:
+    build: .
+    image: ghost-in-the-svid:latest
+    container_name: ghost-in-the-svid
+    # The SPIRE unix attestor (running as root) must readlink /proc/<pid>/exe of
+    # workloads owned by other uids. Docker drops CAP_SYS_PTRACE by default.
+    cap_add:
+      - SYS_PTRACE
+    environment:
+      # 1 = run every experiment on startup and write results/ ; 0 = just start the stack
+      RUN_SCENARIOS: "${RUN_SCENARIOS:-1}"
+      # 1 = keep the stack running after the experiments so you can `docker compose exec lab bash`
+      STAY_UP: "${STAY_UP:-0}"
+    volumes:
+      - ./results:/lab/out
