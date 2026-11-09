@@ -65,12 +65,6 @@ hardened alice asks for bob's record -> 403 user alice may not read bob's record
 positive control alice->alice: 200 | dana(hr_admin)->bob: 200
 ```
 
-## Things I learned building it
-
-* **The unix attestor needs `CAP_SYS_PTRACE` in containers.** SPIRE reads `/proc/<pid>/exe` of workloads owned by other uids. Without the capability it fails with `readlink ... permission denied` and issues no identity at all. In other words, it fails closed.
-* **Stale SPIRE state breaks restarts.** An agent that was already attested, given a new join token, never becomes healthy. The lab wipes its state on every boot.
-* **Positive controls matter.** In an early run, every hardened attack "failed", but only because the hardened agents were still taking the naive code path. The positive controls caught it. Without them, the scorecard would have shown a false "BLOCKED".
-
 ## The four gaps
 
 ### G1: Interpreter collapse
@@ -168,13 +162,6 @@ The lab inlines the broker, so it runs offline with no tenant.
 * The launcher must itself be trusted and tamper-proof. It is the new root of trust for "what is the agent".
 * uid isolation is only the *identity* half of sandboxing. Use seccomp, Landlock, or gVisor for the rest.
 * Server, agent, and workloads share one container for simplicity. In production the server is separate, and node attestation would use something stronger than `join_token`.
-
-## Open problems this lab does not solve (yet)
-
-* **Runtime state drift.** The manifest is fixed at launch. Memory, RAG context, and long conversations change behaviour without changing the hash.
-* **Sub-agent chains.** Nested `act` claims across agent → sub-agent → tool, plus bounding how deep a chain can go.
-* **Identity of model weights loaded at runtime.** Hashing a 70B checkpoint on every launch costs too much. Signed model artefacts are a possible answer.
-* **Cross-trust-domain agents.** SPIFFE federation exists. Federating "approved manifests" between organisations doesn't.
 
 ## Layout
 
